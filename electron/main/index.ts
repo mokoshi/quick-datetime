@@ -14,7 +14,7 @@ process.env.PUBLIC = app.isPackaged
   ? process.env.DIST
   : join(process.env.DIST_ELECTRON, "../public");
 
-import { app, BrowserWindow, shell, ipcMain } from "electron";
+import { app, BrowserWindow, shell, ipcMain, globalShortcut } from "electron";
 import { release } from "os";
 import { join } from "path";
 
@@ -35,12 +35,17 @@ const preload = join(__dirname, "../preload/index.js");
 const url = process.env.VITE_DEV_SERVER_URL;
 const indexHtml = join(process.env.DIST, "index.html");
 
+const WindowWidth = 300;
+const DefaultWindowHieght = 72;
+
 async function createWindow() {
   win = new BrowserWindow({
     title: "Main window",
     type: "panel",
+    width: WindowWidth,
+    height: DefaultWindowHieght,
     frame: false,
-    // titleBarStyle: "hidden",
+    resizable: false,
     icon: join(process.env.PUBLIC, "favicon.svg"),
     webPreferences: {
       preload,
@@ -62,20 +67,18 @@ async function createWindow() {
   win.webContents.on("did-finish-load", () => {
     win?.webContents.send("main-process-message", new Date().toLocaleString());
   });
-
-  // Make all links open with the browser, not with the application
-  win.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith("https:")) shell.openExternal(url);
-    return { action: "deny" };
-  });
 }
 
-app.whenReady().then(createWindow);
-
-app.on("window-all-closed", () => {
-  win = null;
-  if (process.platform !== "darwin") app.quit();
-});
+app
+  .whenReady()
+  .then(() => {
+    globalShortcut.register("Control+W", () => {
+      if (win) {
+        win.show();
+      }
+    });
+  })
+  .then(createWindow);
 
 app.on("second-instance", () => {
   if (win) {
@@ -94,19 +97,16 @@ app.on("activate", () => {
   }
 });
 
-// new window example arg: new windows url
-ipcMain.handle("open-win", (event, arg) => {
-  const childWindow = new BrowserWindow({
-    webPreferences: {
-      preload,
-      nodeIntegration: true,
-      contextIsolation: false,
-    },
-  });
+app.on("browser-window-blur", () => {
+  app.hide();
+});
 
-  if (process.env.VITE_DEV_SERVER_URL) {
-    childWindow.loadURL(`${url}#${arg}`);
-  } else {
-    childWindow.loadFile(indexHtml, { hash: arg });
+ipcMain.on("resize", (e, { height }: { width: number; height: number }) => {
+  if (win) {
+    win.setSize(WindowWidth, Number(height.toFixed()));
   }
+});
+
+ipcMain.on("hide", (e) => {
+  app.hide();
 });
