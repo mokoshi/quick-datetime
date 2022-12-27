@@ -1,95 +1,85 @@
-import dayjs from "dayjs";
-import { useEffect, useRef, useState } from "react";
+import { Input } from "./components/Input";
+import { DatetimeSuggestionItem } from "./components/SuggestionItem";
+import "./index.css";
+import { useResizeObserver } from "./useResizeObserver";
+import { useDatetimeSuggestions } from "./useSuggestions";
 import { clipboard, ipcRenderer } from "electron";
-import useResizeObserver from "./useResizeObserver";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const App: React.FC = () => {
-  const [value, setValue] = useState("");
-  const [cursor, setCursor] = useState(0);
+	const [value, setValue] = useState("");
+	const [cursor, setCursor] = useState(0);
 
-  const element = useRef(null);
+	const containerRef = useRef<HTMLDivElement>(null);
+	const inputRef = useRef<HTMLInputElement>(null);
+	const handleResize: ResizeObserverCallback = (entries) => {
+		const { width, height } = entries[0].contentRect;
+		ipcRenderer.send("resize", { width, height });
+	};
+	useResizeObserver(containerRef, handleResize);
 
-  useEffect(() => {
-    // setValue(clipboard.readText());
-  }, []);
+	const suggestions = useDatetimeSuggestions(value);
 
-  const handleResize = (entries: any) => {
-    const { width, height } = entries[0].contentRect;
-    ipcRenderer.send("resize", { width, height });
-  };
+	useEffect(() => {
+		const showListener = () => {
+			inputRef.current?.select();
+		};
+		ipcRenderer.on("show", showListener);
+		return () => {
+			ipcRenderer.removeListener("show", showListener);
+		};
+	}, []);
 
-  useResizeObserver([element], handleResize);
+	const handleUpDown = useCallback(
+		(isUp: boolean) => {
+			if (suggestions.length > 0) {
+				if (isUp) {
+					setCursor((cursor - 1 + suggestions.length) % suggestions.length);
+				} else {
+					setCursor((cursor + 1) % suggestions.length);
+				}
+			}
+		},
+		[cursor, suggestions],
+	);
 
-  const suggestions = getSuggestions(value);
+	const handleEnter = useCallback(() => {
+		if (suggestions.length > 0) {
+			clipboard.writeText(suggestions[cursor].value);
+		}
+		ipcRenderer.send("hide");
+	}, [suggestions, cursor]);
 
-  return (
-    <div ref={element} style={{ backgroundColor: "#faf" }}>
-      <input
-        style={{ margin: 16 }}
-        type="text"
-        autoFocus
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        onKeyDown={(e) => {
-          if (
-            e.key === "ArrowDown" ||
-            (e.ctrlKey && e.key === "n") ||
-            e.key === "j"
-          ) {
-            setCursor((cursor + 1) % suggestions.length);
-            e.preventDefault();
-          } else if (
-            e.key === "ArrowUp" ||
-            (e.ctrlKey && e.key === "p") ||
-            e.key === "k"
-          ) {
-            setCursor((cursor - 1 + suggestions.length) % suggestions.length);
-            e.preventDefault();
-          } else if (e.key === "Enter") {
-            if (suggestions.length > 0) {
-              clipboard.writeText(suggestions[cursor]);
-            }
-            ipcRenderer.send("hide");
-            e.preventDefault();
-          }
-        }}
-      />
-      {suggestions.map((s, i) => {
-        return (
-          <div
-            style={{ backgroundColor: i === cursor ? "#aef" : "transparent" }}
-          >
-            {s}
-          </div>
-        );
-      })}
-    </div>
-  );
+	const handleEscape = useCallback(() => {
+		ipcRenderer.send("hide");
+	}, []);
+
+	return (
+		<div ref={containerRef}>
+			<div className="p-4">
+				<Input
+					ref={inputRef}
+					value={value}
+					onChange={setValue}
+					onUpDown={handleUpDown}
+					onEnter={handleEnter}
+					onEscape={handleEscape}
+				/>
+			</div>
+			{suggestions.length > 0 && (
+				<div className="border-t border-gray-500 p-2">
+					{suggestions.map((s, i) => {
+						return (
+							<DatetimeSuggestionItem
+								suggestion={s}
+								isSelected={i === cursor}
+							/>
+						);
+					})}
+				</div>
+			)}
+		</div>
+	);
 };
-
-function getSuggestions(v: string) {
-  if (v.match(/^[0-9]+$/)) {
-    if (v.length >= 11) {
-      if (v.length === 11) {
-        v = v + "00";
-      } else if (v.length === 12) {
-        v = v + "0";
-      }
-      const milli = parseInt(v, 10);
-      const d = dayjs(milli);
-      return [d.format("YYYY-MM-DD HH:mm:ss.SSS"), d.format("YYYY-MM-DD")];
-    } else {
-      const n = parseInt(v, 10);
-      const d = dayjs.unix(n);
-      return [d.format("YYYY-MM-DD HH:mm:ss"), d.format("YYYY-MM-DD")];
-    }
-  } else {
-    const d = dayjs(v);
-    if (d.isValid()) {
-      return [d.unix().toString(), d.valueOf().toString()];
-    }
-  }
-  return [];
-}
 
 export default App;
