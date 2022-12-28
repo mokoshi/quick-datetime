@@ -17,7 +17,12 @@ export const DatetimeSuggestionItem: React.FC<Props> = (props) => {
 			)}
 		>
 			<div className="flex-1">{suggestion.value}</div>
-			<div className="text-xs">{suggestion.tz}</div>
+			<div className="text-xs text-right">
+				<div>{suggestion.tz}</div>
+				{suggestion.diffFromUTC && (
+					<div className="text-[9px]">{suggestion.diffFromUTC}</div>
+				)}
+			</div>
 		</div>
 	);
 };

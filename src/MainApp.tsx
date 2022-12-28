@@ -1,4 +1,4 @@
-import { Input } from "./components/Input";
+import { ConverterInput } from "./components/ConverterInput";
 import { DatetimeSuggestionItem } from "./components/SuggestionItem";
 import "./index.css";
 import { useResizeObserver } from "./useResizeObserver";
@@ -6,16 +6,16 @@ import { useDatetimeSuggestions } from "./useSuggestions";
 import { clipboard, ipcRenderer } from "electron";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const App: React.FC = () => {
+const MainApp: React.FC = () => {
 	const [value, setValue] = useState("");
 	const [cursor, setCursor] = useState(0);
 
 	const containerRef = useRef<HTMLDivElement>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
-	const handleResize: ResizeObserverCallback = (entries) => {
+	const handleResize: ResizeObserverCallback = useCallback((entries) => {
 		const { width, height } = entries[0].contentRect;
 		ipcRenderer.send("resize", { width, height });
-	};
+	}, []);
 	useResizeObserver(containerRef, handleResize);
 
 	const suggestions = useDatetimeSuggestions(value);
@@ -57,7 +57,7 @@ const App: React.FC = () => {
 	return (
 		<div ref={containerRef}>
 			<div className="p-4">
-				<Input
+				<ConverterInput
 					ref={inputRef}
 					value={value}
 					onChange={setValue}
@@ -71,6 +71,7 @@ const App: React.FC = () => {
 					{suggestions.map((s, i) => {
 						return (
 							<DatetimeSuggestionItem
+								key={i.toString()}
 								suggestion={s}
 								isSelected={i === cursor}
 							/>
@@ -82,4 +83,4 @@ const App: React.FC = () => {
 	);
 };
 
-export default App;
+export default MainApp;

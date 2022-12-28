@@ -1,4 +1,4 @@
-import App from "./App";
+import MainApp from "./MainApp";
 import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
@@ -10,8 +10,6 @@ dayjs.extend(timezone);
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
 	<React.StrictMode>
-		<App />
+		<MainApp />
 	</React.StrictMode>,
 );
-
-postMessage({ payload: "removeLoading" }, "*");
