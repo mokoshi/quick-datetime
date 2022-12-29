@@ -11,5 +11,10 @@
         "useExhaustiveDependencies": "warn"
       }
     }
+  },
+  "formatter": {
+    "enabled": true,
+    "indentSize": 2,
+    "indentStyle": "space"
   }
 }
