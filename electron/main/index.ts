@@ -64,14 +64,8 @@ Menu.setApplicationMenu(
 
 let mainWindow: BrowserWindow | null = null;
 let preferencesWindow: BrowserWindow | null = null;
-// Here, you can also use other preload
-// const preload = join(__dirname, "../preload/index.js");
-const mainUrl = process.env.VITE_DEV_SERVER_URL;
-const mainHtml = join(process.env.DIST, "index.html");
-const prefUrl = join(process.env.VITE_DEV_SERVER_URL, "pref.html");
-const prefHtml = join(process.env.DIST, "pref.html");
 
-const useDevTool = true;
+const useDevTool = false;
 const WindowWidth = useDevTool ? 960 : 380;
 const DefaultWindowHieght = useDevTool ? 720 : 72;
 
@@ -97,12 +91,12 @@ async function createWindow() {
 	});
 
 	if (process.env.VITE_DEV_SERVER_URL) {
-		mainWindow.loadURL(mainUrl);
+		mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
 		if (useDevTool) {
 			mainWindow.webContents.openDevTools();
 		}
 	} else {
-		mainWindow.loadFile(mainHtml);
+		mainWindow.loadFile(join(process.env.DIST, "index.html"));
 	}
 
 	mainWindow.on("show", () => {
@@ -145,12 +139,14 @@ function showPreferences() {
 	});
 
 	if (process.env.VITE_DEV_SERVER_URL) {
-		preferencesWindow.loadURL(prefUrl);
+		preferencesWindow.loadURL(
+			join(process.env.VITE_DEV_SERVER_URL, "pref.html"),
+		);
 		if (useDevTool) {
 			preferencesWindow.webContents.openDevTools();
 		}
 	} else {
-		preferencesWindow.loadFile(prefHtml);
+		preferencesWindow.loadFile(join(process.env.DIST, "pref.html"));
 	}
 
 	preferencesWindow.on("close", () => {
@@ -172,6 +168,8 @@ function registerShortcut(shortcut: KeyboardShortcut | null) {
 app
 	.whenReady()
 	.then(() => {
+		console.log(storage.getDataPath());
+
 		const preferences = storage.getSync(
 			"preferences",
 		) as JsonStorage["preferences"];

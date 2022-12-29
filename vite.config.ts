@@ -11,6 +11,14 @@ rmSync(path.join(__dirname, "dist-electron"), { recursive: true, force: true });
 
 // https://vitejs.dev/config/
 export default defineConfig({
+	build: {
+		rollupOptions: {
+			input: {
+				main: path.join(__dirname, "index.html"),
+				pref: path.join(__dirname, "pref.html"),
+			},
+		},
+	},
 	resolve: {
 		alias: {
 			"@": path.join(__dirname, "src"),

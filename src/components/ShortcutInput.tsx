@@ -63,6 +63,7 @@ export const ShortcutInput = forwardRef<HTMLInputElement, Props>(
 			<input
 				ref={ref}
 				className="p-2 w-full border rounded-2xl outline-0 bg-transparent text-white text-2xl text-center"
+				autoFocus
 				type="text"
 				value={shortcutString}
 				onKeyDown={handleKeyDown}
