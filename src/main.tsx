@@ -9,7 +9,7 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
-	<React.StrictMode>
-		<MainApp />
-	</React.StrictMode>,
+  <React.StrictMode>
+    <MainApp />
+  </React.StrictMode>,
 );

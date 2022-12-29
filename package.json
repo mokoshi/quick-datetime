@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build && CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder",
-    "format": "rome format --write src electron common"
+    "format": "rome format --write src electron common ./*.ts ./*.js"
   },
   "engines": {
     "node": "^14.18.0 || >=16.0.0"

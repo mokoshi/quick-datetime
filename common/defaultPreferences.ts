@@ -1,7 +1,7 @@
 export const DefaultShortcut: KeyboardShortcut = {
-	ctrl: true,
-	alt: false,
-	shift: false,
-	meta: false,
-	key: "I",
+  ctrl: true,
+  alt: false,
+  shift: false,
+  meta: false,
+  key: "I",
 };
